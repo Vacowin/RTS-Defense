@@ -17,6 +17,7 @@ package
 	 */
 	public class Game extends Sprite
 	{
+		static public const GET_CAMERA:String = "GET_CAMERA";
 		static public const GET_TEXTURE:String = "Game_GET_TEXTURE";
 		static public const GET_TEXTURES:String = "Game_GET_TEXTURES";
 		
@@ -52,11 +53,15 @@ package
 		private var _assetManager:AssetManager;
 		public function get assetManager():AssetManager { return _assetManager; }
 		
+		private var turret:Turret;
+		private var arrayTurret:Vector.<Turret>;
+		
 		public function init():void
 		{
     
 			_assetManager = new AssetManager( 1 );
 			_assetManager.enqueue( "assets/imgs/background/spaceBackground.png" );
+			_assetManager.enqueue( "assets/imgs/ship/ship1.png" );
 			_assetManager.enqueue( "assets/imgs/joystick/virtualJoystick.png" );
 			_assetManager.enqueue( "assets/imgs/joystick/virtualJoystickBase.png" );
 		
@@ -103,6 +108,7 @@ package
 		{
 			Broadcaster.instance.addAppListener( GET_TEXTURE, _assetManager, _assetManager.getTexture );
 			Broadcaster.instance.addAppListener( GET_TEXTURES, _assetManager, _assetManager.getTextures );
+			Broadcaster.instance.addAppListener( GET_CAMERA, this, function():Camera { return _camera;} );
 			
 			_spriteContainer = new Sprite();
 			
@@ -125,7 +131,18 @@ package
 			
 			_keysDown = new Vector.<uint>();
 			
-			this.addEventListener( TouchEvent.TOUCH, onTouch );
+			turret = new Turret(_background.width / 2, _background.height / 2);
+			_spriteContainer.addChild(turret);
+			
+			arrayTurret = new Vector.<Turret>();
+			for (var i:int = 0; i < 0; i++)
+			{
+				var t:Turret = new Turret(Math.random() * 800, Math.random() * 600);
+				_spriteContainer.addChild(t);
+				arrayTurret.push(t);
+			}
+			
+			//this.addEventListener( TouchEvent.TOUCH, onTouch );
 			this.stage.addEventListener( Event.ENTER_FRAME, onUpdate );
 			this.stage.addEventListener( KeyboardEvent.KEY_UP, onKeyUp );
 			this.stage.addEventListener( KeyboardEvent.KEY_DOWN, onKeyDown );
@@ -175,6 +192,12 @@ package
 			//
 			_camera.follow( _camera.x, _camera.y, new Rectangle( 0, 0, _background.totalWidth, _background.totalHeight ) );		
 			_camera.adjustForScreen( _background );
+			
+			for (var i:int = 0; i < arrayTurret.length; i++)
+			{
+				_camera.adjustForScreen((Turret)(arrayTurret[i]));
+			}
+			_camera.adjustForScreen(turret);
 			//trace(_background.x + "    " + _background.y + "          "+_camera.x+"  "+_camera.y+ "          "+_background.width+"  "+_background.height);
 		}
 		

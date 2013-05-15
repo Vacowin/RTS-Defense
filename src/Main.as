@@ -2,6 +2,7 @@ package
 {
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import org.casalib.util.StageReference;
 	import starling.core.Starling;
 	
 	/**
@@ -22,6 +23,9 @@ package
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
+			
+			StageReference.setStage( stage );
+			
 			_starling = new Starling(Game, this.stage);
 			_starling.start();
 			Starling.current.showStats = true;
