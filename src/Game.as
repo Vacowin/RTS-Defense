@@ -40,8 +40,14 @@ package
 		private var _touchX:int = 0;
 		private var _touchY:int = 0;
 		
-		private var _cameraX:int = 0;
-		private var _cameraY:int = 0;
+		private var _scrollSpeed:int = 10;
+		private var _keysDown:Vector.<uint>;
+		private var _leftDown:Boolean = false;
+		private var _rightDown:Boolean = false;
+		private var _upDown:Boolean = false;
+		private var _downDown:Boolean = false;
+		private var _xDir:Number = 0;
+		private var _yDir:Number = 0;		
 		
 		private var _assetManager:AssetManager;
 		public function get assetManager():AssetManager { return _assetManager; }
@@ -117,9 +123,12 @@ package
 			_camera.x = _background.width / 2;
 			_camera.y = _background.height / 2;
 			
+			_keysDown = new Vector.<uint>();
+			
 			this.addEventListener( TouchEvent.TOUCH, onTouch );
 			this.stage.addEventListener( Event.ENTER_FRAME, onUpdate );
 			this.stage.addEventListener( KeyboardEvent.KEY_UP, onKeyUp );
+			this.stage.addEventListener( KeyboardEvent.KEY_DOWN, onKeyDown );
 		}
 		
 		private function onTouch(e:TouchEvent):void 
@@ -154,8 +163,12 @@ package
 		
 		private function onUpdate(e:Event):void 
 		{
-			_camera.x += _virtualJoystick.stickX * 5;
-			_camera.y += _virtualJoystick.stickY * 5;;
+			handleKeys();
+			
+			//_camera.x += _virtualJoystick.stickX * 5;
+			//_camera.y += _virtualJoystick.stickY * 5;;
+			_camera.x += _xDir * _scrollSpeed;
+			_camera.y += _yDir * _scrollSpeed;
 		
 			//
 			// RENDER
@@ -164,9 +177,55 @@ package
 			_camera.adjustForScreen( _background );
 			//trace(_background.x + "    " + _background.y + "          "+_camera.x+"  "+_camera.y+ "          "+_background.width+"  "+_background.height);
 		}
+		
+		private function onKeyDown(e:KeyboardEvent):void 
+		{
+			if ( _keysDown.indexOf( e.keyCode ) < 0 )
+			{
+				_keysDown.push( e.keyCode );
+			}
+		}
+		
 		private function onKeyUp(e:KeyboardEvent = null):void 
 		{
+			if ( _keysDown.indexOf( e.keyCode ) >= 0 )
+			{
+				_keysDown.splice( _keysDown.indexOf( e.keyCode ), 1 );
+			}
+		}
+		
+		private function handleKeys():void
+		{
+			_leftDown = false;
+			_rightDown = false;
+			_upDown = false;
+			_downDown = false;
+			_xDir = 0;
+			_yDir = 0;
 			
+			for each ( var keyCode:uint in _keysDown )
+			{			
+				switch ( keyCode )
+				{
+					case 37:
+						_leftDown = true;
+						_xDir = -1;
+						break;
+					case 38:
+						_upDown = true;
+						_yDir = -1;
+						break;
+					case 39:
+						_rightDown = true;
+						_xDir = 1;
+						break;
+					case 40:
+						_downDown = true;
+						_yDir = 1
+						break;
+					
+				}
+			}
 		}
 		
 		public function Game() 
