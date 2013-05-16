@@ -35,7 +35,7 @@ package
 		private var xoff:Number = 10;
 		private var yoff:Number = 8;;
 		
-		private var steering:Steering;
+		private var steering:SteeringBehavior;
 		private var camera:Camera;
 		public function Turret (x:Number, y:Number) 
 		{
@@ -50,7 +50,7 @@ package
 			this.pivotX = SHIP_SIZE /2 ;
 			this.pivotY = SHIP_SIZE/2 ;
 			
-			steering = new Steering(this, 0.5, 5, 20);
+			steering = new SteeringBehavior(this, 10, 400, 5);
 		
 			this.addEventListener(Event.ENTER_FRAME, eFrame);
 			//Broadcaster.instance.addAppListener( REMOVE_BULLET, this, removeBullet );
@@ -72,7 +72,7 @@ package
 			p.x +=  ( camera.x - Game.HALF_WIDTH );
 			p.y +=  ( camera.y - Game.HALF_HEIGHT );	
 		
-			steering.target = new Vector3D(p.x, p.y);
+			steering.target = new Vector2D(p.x, p.y);
 			steering.update(delta);
 			
 			

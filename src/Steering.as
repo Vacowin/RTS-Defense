@@ -11,7 +11,7 @@ package
 	{
 		public static const SLOWING_RADIUS	:Number = 200;
 		public static const CIRCLE_DISTANCE :Number = 6;
-		public static const CIRCLE_RADIUS :Number = 16;
+		public static const CIRCLE_RADIUS :Number = 8;
 		public static const ANGLE_CHANGE :Number = 1;
 		
 		private var max_force:Number;
@@ -78,10 +78,8 @@ package
 			
 			if (distance <= slowingRadius) {
 				desired.scaleBy(max_velocity * distance / slowingRadius);
-				trace("y");
 			} else {
 				desired.scaleBy(max_velocity);
-				trace("n");
 			}
 			
 			force = desired.subtract(velocity);
@@ -119,12 +117,12 @@ package
 		
 		public function update(delta:Number):void {
 			position = new Vector3D(object.worldX, object.worldY);
-			steering = seek(target);
-			//steering = wander();
+			//steering = seek(target);
+			steering = wander();
 			
 			truncate(steering, max_force);
 			steering.scaleBy(1 / mass);
-			
+			steering.scaleBy(delta);
 			velocity = velocity.add(steering);
 			//velocity = new Vector3D(velocity.x * delta, velocity.y * delta);
 			truncate(velocity, max_velocity);
@@ -136,7 +134,7 @@ package
 			object.worldX = position.x;
 			object.worldY = position.y;
 					
-			rotation = Math.atan2( velocity.y, velocity.x );			
+			rotation = Math.atan2( velocity.y, velocity.x );
 		}
 		
 		public function get target():Vector3D 
