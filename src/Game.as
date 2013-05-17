@@ -54,6 +54,7 @@ package
 		public function get assetManager():AssetManager { return _assetManager; }
 		
 		private var turret:Turret;
+		private var turret2:Turret;
 		private var arrayTurret:Vector.<Turret>;
 		
 		public function init():void
@@ -131,13 +132,19 @@ package
 			
 			_keysDown = new Vector.<uint>();
 			
-			turret = new Turret(_background.width / 2, _background.height / 2);
+			turret = new Turret(_background.width / 3, _background.height / 3, Turret.HUNTER);
 			_spriteContainer.addChild(turret);
+			
+			turret2 = new Turret(_background.width / 2, _background.height / 2, Turret.ENEMY);
+			_spriteContainer.addChild(turret2);
+			
+			turret2.steering.targetShip = turret;
+			turret.steering.targetShip = turret2;
 			
 			arrayTurret = new Vector.<Turret>();
 			for (var i:int = 0; i < 0; i++)
 			{
-				var t:Turret = new Turret(Math.random() * 800, Math.random() * 600);
+				var t:Turret = new Turret(Math.random() * 800, Math.random() * 600, Turret.HUNTER);
 				_spriteContainer.addChild(t);
 				arrayTurret.push(t);
 			}
@@ -198,6 +205,7 @@ package
 				_camera.adjustForScreen((Turret)(arrayTurret[i]));
 			}
 			_camera.adjustForScreen(turret);
+			_camera.adjustForScreen(turret2);
 			//trace(_background.x + "    " + _background.y + "          "+_camera.x+"  "+_camera.y+ "          "+_background.width+"  "+_background.height);
 		}
 		

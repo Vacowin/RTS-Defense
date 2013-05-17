@@ -78,6 +78,24 @@ package
 			}
 		}
 		
+		public function getNormalize( ) : Vector2D
+		{
+			var v:Vector2D = new Vector2D();
+			var mag : Number = Math.sqrt(_x * _x + _y * _y);
+			if (mag == 0)
+			{
+				v.x = 0;
+				v.y = 0;
+			}
+			else
+			{
+				v.x = _x / mag;
+				v.y = _y / mag;
+			}
+			return v;
+		}
+		
+		
 		public function dot(v2 : Vector2D): Number
 		{
 			return (_x * v2.x + _y * v2.y);

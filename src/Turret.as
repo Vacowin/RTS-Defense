@@ -16,6 +16,9 @@ package
 
 	public class Turret extends starling.display.Sprite implements IRenderable
 	{	
+		static public const HUNTER:String = "SHIP_HUNTER"; 
+		static public const ENEMY:String = "SHIP_ENEMY"; 
+		
 		static public const SHIP_SIZE:Number = 70;
 		static public const REMOVE_BULLET:String = "remove_bullet";
 		
@@ -35,11 +38,18 @@ package
 		private var xoff:Number = 10;
 		private var yoff:Number = 8;;
 		
-		private var steering:SteeringBehavior;
+		private var _steering:SteeringBehavior;
 		private var camera:Camera;
-		public function Turret (x:Number, y:Number) 
+		
+		private var _type:String;
+		private var _velocity:Vector2D;
+		private var _position:Vector2D;
+		
+		public function Turret (x:Number, y:Number, t:String) 
 		{
 			camera = Broadcaster.instance.appBroadcast(Game.GET_CAMERA, []);
+			
+			type = t;
 			
 			_img =  new Image( Broadcaster.instance.appBroadcast(Game.GET_TEXTURE, ["ship1"] ));
 			_img.width = SHIP_SIZE;
@@ -50,8 +60,16 @@ package
 			this.pivotX = SHIP_SIZE /2 ;
 			this.pivotY = SHIP_SIZE/2 ;
 			
-			steering = new SteeringBehavior(this, 10, 400, 5);
+			position = new Vector2D(x, y);
+			velocity = new Vector2D();
+			
+			var spd:Number = 150;
+			
+			if (type == ENEMY) spd += 50;
+			
+			steering = new SteeringBehavior(this, 2, spd, 1);
 		
+			
 			this.addEventListener(Event.ENTER_FRAME, eFrame);
 			//Broadcaster.instance.addAppListener( REMOVE_BULLET, this, removeBullet );
 		}
@@ -68,6 +86,7 @@ package
 			var delta:Number = e.passedTime;
 			//rotation += delta * 1;
 			
+			
 			var p:Point =  new Point( StageReference.getStage().mouseX, StageReference.getStage().mouseY ) ;
 			p.x +=  ( camera.x - Game.HALF_WIDTH );
 			p.y +=  ( camera.y - Game.HALF_HEIGHT );	
@@ -75,7 +94,7 @@ package
 			steering.target = new Vector2D(p.x, p.y);
 			steering.update(delta);
 			
-			
+			this.velocity = steering.velocity;
 			this.rotation = steering.rotation;
 			
 			
@@ -163,6 +182,46 @@ package
 		public function set img(value:Image):void 
 		{
 			_img = value;
+		}
+		
+		public function get type():String 
+		{
+			return _type;
+		}
+		
+		public function set type(value:String):void 
+		{
+			_type = value;
+		}
+		
+		public function get velocity():Vector2D 
+		{
+			return _velocity;
+		}
+		
+		public function set velocity(value:Vector2D):void 
+		{
+			_velocity = value;
+		}
+		
+		public function get position():Vector2D 
+		{
+			return _position;
+		}
+		
+		public function set position(value:Vector2D):void 
+		{
+			_position = value;
+		}
+		
+		public function get steering():SteeringBehavior 
+		{
+			return _steering;
+		}
+		
+		public function set steering(value:SteeringBehavior):void 
+		{
+			_steering = value;
 		}
 		
 		
