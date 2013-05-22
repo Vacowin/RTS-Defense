@@ -14,6 +14,55 @@ package
 			_y = y;
 		}
 		
+		public static function lineIntersection2D(a:Vector2D, b:Vector2D, c:Vector2D, d:Vector2D):Array
+		{
+			var point:Vector2D; // intersection point
+			var dist:Number;
+			
+			var rTop:Number = (a.y - c.y) * (d.x - c.x) - (a.x - c.x) * (d.y - c.y);
+			var rBot:Number = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+			
+			var sTop:Number = (a.y - c.y) * (b.x - a.x) - (a.x - c.x) * (b.y - a.y);
+			var sBot:Number = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+			
+			if (( rBot == 0) || (sBot == 0))
+				return [false];
+				
+			var r:Number = rTop / rBot;
+			var s:Number = sTop / sBot;
+			
+			if ((r > 0) && (r < 1) && (s > 0) && (s < 1))
+			{
+				dist = Distance(a, b) * r;
+				point = (a.add((b.subtract(a)).multiply(r))).clone();
+				return [true,point,dist];
+			}
+			else
+			{
+				dist = 0;
+				return [false];
+			}
+		}
+		
+		public static function rotateAroundOrigin(v:Vector2D, theta:Number):Vector2D
+		{
+			var cos:Number = Math.cos(theta);
+			var sin:Number = Math.sin(theta);
+			
+			var px:Number = v.x * cos - v.y * sin;
+			var py:Number = v.x * sin - v.y * cos;
+			
+			return new Vector2D(px, py);
+		}
+		
+		public static function Distance(v1:Vector2D, v2:Vector2D):Number
+		{
+			var ySeparation:Number = v2.y - v1.y;
+			var xSeparation:Number = v2.x - v1.x;
+			
+			return Math.sqrt(ySeparation * ySeparation + xSeparation * xSeparation);
+		}
+		
 		public function clone():Vector2D
 		{
 			return new Vector2D(_x, _y);
@@ -122,13 +171,18 @@ package
 			return new Vector2D(-_y, _x);
 		}
 		
-		public function truncate(max:Number):void
+		public function truncate(max:Number):Vector2D
 		{
-			if (magnitude() > max)
-			{
-				this.normalize();
-				this.multiply(max);
-			}
+			//if (magnitude() > max)
+			//{
+				//this.normalize();
+				//this.multiply(max);
+			//}
+			
+			var s:Number = max / magnitude();
+			s = (s < 1.0) ? s : 1.0;
+			
+			return multiply(s);
 		}
 		
 		public function reverse():Vector2D

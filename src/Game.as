@@ -5,6 +5,7 @@ package
 	import com.telosinternational.starlingbasic.StarlingUtils;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import starling.display.DisplayObject;
 	import starling.display.Sprite;
 	import starling.display.Image;
 	import com.telosinternational.starlingbasic.touch.VirtualJoystick;
@@ -17,12 +18,15 @@ package
 	 */
 	public class Game extends Sprite
 	{
+		static public const GET_WALL:String = "GET_WALL";
 		static public const GET_CAMERA:String = "GET_CAMERA";
 		static public const GET_TEXTURE:String = "Game_GET_TEXTURE";
 		static public const GET_TEXTURES:String = "Game_GET_TEXTURES";
 		
 		static public const WIDTH:int = 800;
 		static public const HEIGHT:int = 600;
+		static public const BACKGROUND_WIDTH:int = 1600;
+		static public const BACKGROUND_HEIGHT:int = 1200;
 		
 		static public const HALF_WIDTH:int = WIDTH / 2.0;
 		static public const HALF_HEIGHT:int = HEIGHT / 2.0;
@@ -32,6 +36,7 @@ package
 		private var _camera:Camera;
 		private var _virtualJoystick:VirtualJoystick;
 		private var _move:Boolean;
+		private var walls:Vector.<Wall2D>;
 		
 		private var _spriteContainer:Sprite;
 		
@@ -57,12 +62,15 @@ package
 		private var turret2:Turret;
 		private var arrayTurret:Vector.<Turret>;
 		
+		private var bulletPool:BulletPool;
+		
 		public function init():void
 		{
     
 			_assetManager = new AssetManager( 1 );
 			_assetManager.enqueue( "assets/imgs/background/spaceBackground.png" );
 			_assetManager.enqueue( "assets/imgs/ship/ship1.png" );
+			_assetManager.enqueue( "assets/imgs/ship/ship2.png" );
 			_assetManager.enqueue( "assets/imgs/joystick/virtualJoystick.png" );
 			_assetManager.enqueue( "assets/imgs/joystick/virtualJoystickBase.png" );
 		
@@ -109,7 +117,15 @@ package
 		{
 			Broadcaster.instance.addAppListener( GET_TEXTURE, _assetManager, _assetManager.getTexture );
 			Broadcaster.instance.addAppListener( GET_TEXTURES, _assetManager, _assetManager.getTextures );
-			Broadcaster.instance.addAppListener( GET_CAMERA, this, function():Camera { return _camera;} );
+			Broadcaster.instance.addAppListener( GET_CAMERA, this, function():Camera { return _camera; } );
+			
+			walls = new Vector.<Wall2D>();
+			walls.push(new Wall2D(new Vector2D(0, 0), new Vector2D(Game.BACKGROUND_WIDTH, 0)));
+			walls.push(new Wall2D(new Vector2D(Game.BACKGROUND_WIDTH, 0), new Vector2D(Game.BACKGROUND_WIDTH, Game.BACKGROUND_HEIGHT)));
+			walls.push(new Wall2D(new Vector2D(Game.BACKGROUND_WIDTH, Game.BACKGROUND_HEIGHT), new Vector2D(0, Game.BACKGROUND_HEIGHT)));
+			walls.push(new Wall2D(new Vector2D(0, Game.BACKGROUND_HEIGHT), new Vector2D(0, 0)));
+			
+			Broadcaster.instance.addAppListener( GET_WALL, this, function():Vector.<Wall2D> { return walls; } );
 			
 			_spriteContainer = new Sprite();
 			
@@ -132,14 +148,10 @@ package
 			
 			_keysDown = new Vector.<uint>();
 			
-			turret = new Turret(_background.width / 3, _background.height / 3, Turret.HUNTER);
-			_spriteContainer.addChild(turret);
 			
-			turret2 = new Turret(_background.width / 2, _background.height / 2, Turret.ENEMY);
-			_spriteContainer.addChild(turret2);
 			
-			turret2.steering.targetShip = turret;
-			turret.steering.targetShip = turret2;
+			
+			bulletPool = new BulletPool(this._spriteContainer);
 			
 			arrayTurret = new Vector.<Turret>();
 			for (var i:int = 0; i < 0; i++)
@@ -148,6 +160,39 @@ package
 				_spriteContainer.addChild(t);
 				arrayTurret.push(t);
 			}
+			
+			turret = new Turret(_background.width / 3, _background.height / 3, Turret.HUNTER);
+			_spriteContainer.addChild(turret);
+			arrayTurret.push(turret);
+			
+			turret2 = new Turret(_background.width / 2, _background.height / 2, Turret.ENEMY);
+			_spriteContainer.addChild(turret2);
+			arrayTurret.push(turret2);
+			
+			turret2.steering.targetShip = turret;
+			turret.steering.targetShip = turret2;
+			turret.target = turret2;
+			
+			
+			
+			for (var j:int = 0; j < 10; j++)
+			{
+				var enemy:Turret = new Turret(_background.width / 3, _background.height / 3, Turret.ENEMY);
+				_spriteContainer.addChild(enemy);
+				enemy.target = turret;
+				enemy.steering.targetShip = turret;
+				arrayTurret.push(enemy);
+			
+				for (var k:int = 0; k < 2; k++)
+				{
+					var test:Turret = new Turret(_background.width / 1.5, _background.height / 1.5, Turret.HUNTER);
+					test.steering.targetShip = enemy;
+					test.target = enemy;
+					_spriteContainer.addChild(test);
+					arrayTurret.push(test);
+				}
+			}
+			
 			
 			//this.addEventListener( TouchEvent.TOUCH, onTouch );
 			this.stage.addEventListener( Event.ENTER_FRAME, onUpdate );
@@ -204,8 +249,16 @@ package
 			{
 				_camera.adjustForScreen((Turret)(arrayTurret[i]));
 			}
-			_camera.adjustForScreen(turret);
-			_camera.adjustForScreen(turret2);
+			
+			for (var j:int = 0; j < this._spriteContainer.numChildren; j++)
+			{
+				var object:DisplayObject = this._spriteContainer.getChildAt(j);
+				if (object is Bullet)
+					_camera.adjustForScreen((Bullet)(object));
+			}
+			
+			//_camera.adjustForScreen(turret);
+			//_camera.adjustForScreen(turret2);
 			//trace(_background.x + "    " + _background.y + "          "+_camera.x+"  "+_camera.y+ "          "+_background.width+"  "+_background.height);
 		}
 		

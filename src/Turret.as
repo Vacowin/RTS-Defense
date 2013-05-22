@@ -5,6 +5,7 @@ package
 	import flash.geom.Vector3D;
 	import Interfaces.IRenderable;
 	import org.casalib.util.StageReference;
+	import starling.animation.Transitions;
 	import starling.display.Image;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
@@ -13,6 +14,7 @@ package
 	import com.telosinternational.starlingbasic.Broadcaster;
 	import starling.textures.Texture;
 	import starling.events.*;
+	import starling.core.Starling;
 
 	public class Turret extends starling.display.Sprite implements IRenderable
 	{	
@@ -32,7 +34,7 @@ package
 		private var range:int = RANGE;
 		//private var enTarget:Enemy;
 		private var cTime:Number = 0;//how much time since a shot was fired by this turret
-		private var reloadTime:Number = 0.1;//how long it takes to fire another shot
+		private var reloadTime:Number = 0.05;//how long it takes to fire another shot
 		private var loaded:Boolean = true;//whether or not this turret can shoot
 
 		private var xoff:Number = 10;
@@ -45,29 +47,35 @@ package
 		private var _velocity:Vector2D;
 		private var _position:Vector2D;
 		
+		private var _health:Number = 100;
+		private var _target:Turret;
+		
 		public function Turret (x:Number, y:Number, t:String) 
 		{
 			camera = Broadcaster.instance.appBroadcast(Game.GET_CAMERA, []);
 			
 			type = t;
 			
-			_img =  new Image( Broadcaster.instance.appBroadcast(Game.GET_TEXTURE, ["ship1"] ));
+			if (type == ENEMY)
+				_img =  new Image( Broadcaster.instance.appBroadcast(Game.GET_TEXTURE, ["ship1"] ));
+			if (type == HUNTER)
+				_img =  new Image( Broadcaster.instance.appBroadcast(Game.GET_TEXTURE, ["ship2"] ));
 			_img.width = SHIP_SIZE;
 			_img.height = SHIP_SIZE;
 			addChild(_img);
-			this.worldX = x
-			this.worldY = y 
+			this.worldX = x - SHIP_SIZE / 2;
+			this.worldY = y - SHIP_SIZE / 2;
 			this.pivotX = SHIP_SIZE /2 ;
 			this.pivotY = SHIP_SIZE/2 ;
 			
 			position = new Vector2D(x, y);
 			velocity = new Vector2D();
 			
-			var spd:Number = 150;
+			var spd:Number = 200;
 			
-			if (type == ENEMY) spd += 50;
+			if (type == ENEMY) spd += 40;
 			
-			steering = new SteeringBehavior(this, 2, spd, 1);
+			steering = new SteeringBehavior(this, 1, spd, 2);
 		
 			
 			this.addEventListener(Event.ENTER_FRAME, eFrame);
@@ -93,7 +101,6 @@ package
 		
 			steering.target = new Vector2D(p.x, p.y);
 			steering.update(delta);
-			
 			this.velocity = steering.velocity;
 			this.rotation = steering.rotation;
 			
@@ -127,6 +134,27 @@ package
 					//
 				//}
 			//}
+			
+			
+			if (loaded && type == HUNTER)
+			{	
+				if (position.subtract(target.position).magnitude() > 250) 
+					return;
+					
+				loaded = false;//then make in unable to do it for a bit
+				var newBullet:Bullet = Broadcaster.instance.appBroadcast(BulletPool.GET_BULLET, []);
+				newBullet.reset();
+				newBullet.worldX = this.worldX ;
+				newBullet.worldY = this.worldY ;
+				newBullet.direction = steering.heading;
+				newBullet.target = target ;
+				newBullet.damage = damage;
+				newBullet.addEventListener(Event.ENTER_FRAME, newBullet.eFrame);
+				(this.parent).addChild(newBullet);
+					
+			}
+				
+				
 			//LOADING THE TURRET
 			if (!loaded)
 			{
@@ -137,6 +165,19 @@ package
 					cTime = 0;//and reset the time
 				}
 			}
+		}
+		
+		public function takeDamage(dmg:Number):void
+		{
+			_health -= dmg;
+			//Starling.juggler.tween(this.img, 0.5, {
+				//transition: Transitions.EASE_IN,
+				//delay: 0,
+				//repeatCount: 0,
+				//onComplete: function():void { },
+				//color : 0
+			//});
+			
 		}
 		
 		public function lockBounds( zone:Rectangle ):void
@@ -222,6 +263,26 @@ package
 		public function set steering(value:SteeringBehavior):void 
 		{
 			_steering = value;
+		}
+		
+		public function get health():Number 
+		{
+			return _health;
+		}
+		
+		public function set health(value:Number):void 
+		{
+			_health = value;
+		}
+		
+		public function get target():Turret 
+		{
+			return _target;
+		}
+		
+		public function set target(value:Turret):void 
+		{
+			_target = value;
 		}
 		
 		
